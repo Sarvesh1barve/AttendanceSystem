@@ -1,25 +1,1497 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Employee Attendance</title>
+  <meta charset="UTF-8" />
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0b0f17">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Employee Register + Attendance + Salary (Offline)</title>
+  <style>
+    :root{
+      --bg:#0b0f17;
+      --card:#121a2a;
+      --card2:#0f1626;
+      --text:#e6edf7;
+      --muted:#a9b4c6;
+      --border:rgba(255,255,255,.10);
+      --accent:#5aa9ff;
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0b0f17">
+      /* REQUIRED colors */
+      --present:#4CAF50; /* green */
+      --absent:#F44336;  /* red */
+      --details:#FFEB3B; /* yellow */
+      --detailsText:#1a1a1a;
 
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:14px;
+    }
+
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 700px at 20% -10%, rgba(90,169,255,.22), transparent 60%),
+                  radial-gradient(1000px 600px at 95% 20%, rgba(76,175,80,.10), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+
+    .app{
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    header{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:14px;
+      flex-wrap:wrap;
+    }
+
+    .brand{
+      display:flex; align-items:center; gap:10px;
+    }
+    .logo{
+      width:38px; height:38px; border-radius:12px;
+      background: linear-gradient(135deg, rgba(90,169,255,.95), rgba(76,175,80,.65));
+      box-shadow: var(--shadow);
+    }
+    h1{font-size:16px; margin:0;}
+    .sub{font-size:12px; color:var(--muted); margin-top:2px;}
+
+    .topActions{
+      display:flex; gap:8px; flex-wrap:wrap;
+      align-items:center;
+      justify-content:flex-end;
+    }
+
+    button, input, select, textarea{
+      font:inherit;
+    }
+
+    .btn{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      cursor:pointer;
+      transition: transform .06s ease, background .2s ease, border-color .2s ease;
+      display:inline-flex; align-items:center; gap:8px;
+      user-select:none;
+    }
+    .btn:hover{ background: rgba(255,255,255,.09); border-color: rgba(255,255,255,.18); }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{
+      background: rgba(90,169,255,.18);
+      border-color: rgba(90,169,255,.30);
+    }
+    .btn.primary:hover{
+      background: rgba(90,169,255,.25);
+    }
+
+    .btn.present{ background: rgba(76,175,80,.18); border-color: rgba(76,175,80,.35); }
+    .btn.absent{ background: rgba(244,67,54,.18); border-color: rgba(244,67,54,.35); }
+    .btn.details{ background: var(--details); border-color: rgba(255,235,59,.70); color: var(--detailsText); font-weight:700; }
+    .btn.danger{ background: rgba(244,67,54,.18); border-color: rgba(244,67,54,.35); }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 14px;
+      align-items:start;
+    }
+
+    @media (max-width: 900px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .pill{
+      padding: 7px 10px;
+      border-radius: 999px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.22);
+      color: var(--muted);
+      font-size: 12px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .dateBig{
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing:.2px;
+    }
+
+    .muted{ color: var(--muted); }
+
+    .field{
+      display:flex; flex-direction:column;
+      gap:6px;
+      min-width: 180px;
+      flex:1;
+    }
+    .field label{ font-size:12px; color: var(--muted); }
+    .field input, .field select, .field textarea{
+      width:100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.20);
+      color: var(--text);
+      outline:none;
+    }
+    textarea{ min-height: 70px; resize: vertical; }
+
+    .list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-top:12px;
+    }
+
+    .empItem{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:10px;
+      align-items:center;
+      padding: 12px;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.20);
+    }
+    @media(max-width:600px){
+      .empItem{ grid-template-columns: 1fr; }
+    }
+
+    .empMeta{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      min-width: 0;
+    }
+    .empName{
+      font-weight:800;
+      font-size:14px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .empSmall{
+      font-size:12px;
+      color: var(--muted);
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .empActions{
+      display:flex;
+      gap:8px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+    }
+
+    .statusBadge{
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight:800;
+      font-size: 12px;
+      letter-spacing:.4px;
+      border:1px solid var(--border);
+    }
+    .statusP{ background: rgba(76,175,80,.22); border-color: rgba(76,175,80,.45); }
+    .statusA{ background: rgba(244,67,54,.22); border-color: rgba(244,67,54,.45); }
+    .statusU{ background: rgba(255,255,255,.06); color: var(--muted); }
+
+    /* Modal */
+    .modalBackdrop{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 14px;
+      z-index: 50;
+    }
+    .modal{
+      width:min(720px, 100%);
+      background: linear-gradient(180deg, rgba(18,26,42,.96), rgba(10,14,22,.96));
+      border:1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+      max-height: 88vh;
+      overflow:auto;
+    }
+    .modalHeader{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom: 10px;
+    }
+    .modalTitle{
+      font-weight:900; letter-spacing:.2px;
+    }
+    .closeX{
+      width:36px; height:36px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      cursor:pointer;
+    }
+
+    .sectionTitle{
+      font-weight:900;
+      margin: 10px 0 8px;
+      font-size: 13px;
+      color: #d7e3ff;
+      letter-spacing:.2px;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap:10px;
+    }
+    @media(max-width:900px){
+      .stats{ grid-template-columns: repeat(2, 1fr); }
+    }
+    @media(max-width:420px){
+      .stats{ grid-template-columns: 1fr; }
+    }
+
+    .statCard{
+      padding: 12px;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.18);
+      min-height: 70px;
+    }
+    .statLabel{ font-size:12px; color: var(--muted); }
+    .statVal{ font-size:16px; font-weight:900; margin-top:4px; }
+
+    /* Calendar */
+    .calWrap{
+      border:1px solid var(--border);
+      border-radius: 14px;
+      overflow:hidden;
+      background: rgba(0,0,0,.18);
+    }
+    .calHeader{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding: 10px 12px;
+      border-bottom:1px solid var(--border);
+    }
+    .calGrid{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+    }
+    .calDow, .calCell{
+      padding: 10px 0;
+      text-align:center;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      border-right:1px solid rgba(255,255,255,.06);
+      font-size: 12px;
+    }
+    .calDow{ color: var(--muted); background: rgba(255,255,255,.03); font-weight:800;}
+    .calCell{
+      cursor:pointer;
+      position:relative;
+      min-height: 44px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .calCell:nth-child(7n){ border-right:none; }
+    .calCell.isOther{ color: rgba(169,180,198,.4); }
+    .dayDot{
+      position:absolute;
+      width:30px; height:30px;
+      border-radius: 999px;
+      z-index:0;
+      opacity:.90;
+    }
+    .dotP{ background: rgba(76,175,80,.55); }
+    .dotA{ background: rgba(244,67,54,.55); }
+    .dayNum{ position:relative; z-index:1; font-weight:800; }
+    .calCell:hover{ background: rgba(255,255,255,.04); }
+
+    /* Borrow list */
+    .borrowList{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .borrowItem{
+      border:1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(0,0,0,.18);
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .borrowLeft{ min-width: 220px; }
+    .borrowAmt{ font-weight:900; }
+    .borrowNote{ color: var(--muted); font-size:12px; margin-top:3px; }
+
+    .footerHint{
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 12px;
+      line-height:1.4;
+    }
+
+    /* Floating Add */
+    .fab{
+      position:fixed;
+      right: 18px;
+      bottom: 18px;
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      border: 1px solid rgba(90,169,255,.35);
+      background: rgba(90,169,255,.25);
+      color: var(--text);
+      font-size: 22px;
+      font-weight: 900;
+      cursor:pointer;
+      box-shadow: var(--shadow);
+      z-index: 40;
+    }
+    .fab:hover{ background: rgba(90,169,255,.34); }
+
+    .hide{ display:none !important; }
+  </style>
 </head>
 <body>
-<h2>Employee Attendance PWA</h2>
-<p>Replace this file with your full HTML app if needed.</p>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <h1>Employee Register + Attendance + Salary (Offline)</h1>
+          <div class="sub">LocalStorage • Manual JSON Export/Import • Works without internet</div>
+        </div>
+      </div>
+      <div class="topActions">
+        <button class="btn" id="btnExportMonth">📤 Export Monthly</button>
+        <button class="btn" id="btnExportFull">📦 Export Full</button>
+        <button class="btn" id="btnImport">📥 Import JSON</button>
+        <input type="file" id="importFile" accept="application/json" class="hide" />
+      </div>
+    </header>
 
-<script>
-if ("serviceWorker" in navigator) {
+    <div class="grid">
+      <!-- MAIN: Daily attendance -->
+      <div class="card">
+        <div class="row" style="justify-content:space-between;">
+          <div>
+            <div class="muted" style="font-size:12px;">Selected Date</div>
+            <div class="dateBig" id="todayText">--</div>
+          </div>
+          <div class="row">
+            <button class="btn primary" id="btnPickDate">📅 Change Date</button>
+            <input type="date" id="datePicker" class="hide" />
+            <span class="pill">Attendance: <b id="empCount">0</b> employees</span>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <div class="field">
+            <label>Search employee</label>
+            <input id="searchInput" placeholder="Type name to filter..." />
+          </div>
+        </div>
+
+        <div class="list" id="employeeList"></div>
+
+        <div class="footerHint">
+          ✅ Tip: Attendance is <b>unique per employee per date</b>. If unmarked, it stays “Unmarked” (not absent).
+        </div>
+      </div>
+
+      <!-- SIDE: quick add + summary -->
+      <div class="card">
+        <div class="sectionTitle">Quick Summary</div>
+        <div class="stats">
+          <div class="statCard">
+            <div class="statLabel">Total Employees</div>
+            <div class="statVal" id="statEmployees">0</div>
+          </div>
+          <div class="statCard">
+            <div class="statLabel">Marked Present (date)</div>
+            <div class="statVal" id="statPresent">0</div>
+          </div>
+          <div class="statCard">
+            <div class="statLabel">Marked Absent (date)</div>
+            <div class="statVal" id="statAbsent">0</div>
+          </div>
+          <div class="statCard">
+            <div class="statLabel">Unmarked (date)</div>
+            <div class="statVal" id="statUnmarked">0</div>
+          </div>
+          <div class="statCard">
+            <div class="statLabel">All-time Borrowed</div>
+            <div class="statVal" id="statBorrowAll">₹0</div>
+          </div>
+        </div>
+
+        <div class="sectionTitle" style="margin-top:14px;">About Backup/Sync</div>
+        <div class="footerHint">
+          Export creates a JSON file you can store anywhere. Import merges employees using UUID
+          (so no duplicates) and upserts attendance by (employeeUUID + date).
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="fab" id="fabAdd" title="Add Employee">+</button>
+
+  <!-- Add Employee Modal -->
+  <div class="modalBackdrop" id="modalAddEmp">
+    <div class="modal">
+      <div class="modalHeader">
+        <div class="modalTitle">Add Employee</div>
+        <button class="closeX" data-close="modalAddEmp">✕</button>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Name (required)</label>
+          <input id="addEmpName" placeholder="e.g., Rohan Patil" />
+        </div>
+        <div class="field">
+          <label>Daily Wage (required numeric)</label>
+          <input id="addEmpWage" type="number" min="0" step="0.01" placeholder="e.g., 500" />
+        </div>
+      </div>
+      <div class="row" style="justify-content:flex-end; margin-top:12px;">
+        <button class="btn" data-close="modalAddEmp">Cancel</button>
+        <button class="btn primary" id="btnSaveEmp">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Employee Details Modal -->
+  <div class="modalBackdrop" id="modalDetails">
+    <div class="modal">
+      <div class="modalHeader">
+        <div class="modalTitle" id="detailTitle">Employee Details</div>
+        <button class="closeX" data-close="modalDetails">✕</button>
+      </div>
+
+      <div class="row">
+        <div class="pill">Daily Wage: <b id="detailWage">₹0</b></div>
+        <div class="pill">Employee UUID: <b id="detailUuid" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace;">-</b></div>
+      </div>
+
+      <div class="row" style="margin-top:12px;">
+        <div class="field">
+          <label>Selected Month</label>
+          <input type="month" id="detailMonth" />
+        </div>
+        <div class="field">
+          <label>Jump to date in month (optional)</label>
+          <input type="date" id="detailJumpDate" />
+        </div>
+        <div style="display:flex; align-items:flex-end; gap:10px;">
+          <button class="btn primary" id="btnJump">Go</button>
+        </div>
+      </div>
+
+      <div class="sectionTitle">Monthly Salary Report</div>
+      <div class="stats">
+        <div class="statCard">
+          <div class="statLabel">Present Days</div>
+          <div class="statVal" id="mPresent">0</div>
+        </div>
+        <div class="statCard">
+          <div class="statLabel">Absent Days</div>
+          <div class="statVal" id="mAbsent">0</div>
+        </div>
+        <div class="statCard">
+          <div class="statLabel">Monthly Salary</div>
+          <div class="statVal" id="mSalary">₹0</div>
+        </div>
+        <div class="statCard">
+          <div class="statLabel">Borrowed (month)</div>
+          <div class="statVal" id="mBorrow">₹0</div>
+        </div>
+        <div class="statCard">
+          <div class="statLabel">Net Payable</div>
+          <div class="statVal" id="mNet">₹0</div>
+        </div>
+      </div>
+
+      <div class="sectionTitle" style="margin-top:14px;">All-time Totals</div>
+      <div class="stats" style="grid-template-columns: repeat(3,1fr);">
+        <div class="statCard">
+          <div class="statLabel">All-time Present</div>
+          <div class="statVal" id="aPresent">0</div>
+        </div>
+        <div class="statCard">
+          <div class="statLabel">All-time Borrowed</div>
+          <div class="statVal" id="aBorrow">₹0</div>
+        </div>
+        <div class="statCard">
+          <div class="statLabel">All-time Net (salary - borrow)</div>
+          <div class="statVal" id="aNet">₹0</div>
+        </div>
+      </div>
+
+      <div class="sectionTitle" style="margin-top:14px;">Calendar (tap a date to set P/A)</div>
+      <div class="calWrap">
+        <div class="calHeader">
+          <div><b id="calMonthTitle">Month</b> <span class="muted" id="calHint">(tap a day)</span></div>
+          <div class="row">
+            <button class="btn present" id="btnSetP">P</button>
+            <button class="btn absent" id="btnSetA">A</button>
+            <button class="btn" id="btnClearMark">Clear</button>
+          </div>
+        </div>
+        <div class="calGrid" id="calGrid"></div>
+      </div>
+
+      <div class="sectionTitle" style="margin-top:14px;">Borrowed Money</div>
+      <div class="row">
+        <button class="btn primary" id="btnAddBorrow">➕ Add Borrowed Amount</button>
+        <span class="pill">Showing: <b id="borrowScope">Selected month</b></span>
+        <button class="btn" id="btnToggleBorrowScope">Toggle Month/All</button>
+      </div>
+
+      <div style="margin-top:10px;" class="borrowList" id="borrowList"></div>
+
+      <div class="footerHint">
+        Net payable can go negative. If Borrowed &gt; Salary, it shows negative (balance to recover).
+      </div>
+    </div>
+  </div>
+
+  <!-- Borrow Modal -->
+  <div class="modalBackdrop" id="modalBorrow">
+    <div class="modal">
+      <div class="modalHeader">
+        <div class="modalTitle" id="borrowModalTitle">Add Borrowed Amount</div>
+        <button class="closeX" data-close="modalBorrow">✕</button>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Amount (required numeric)</label>
+          <input id="borrowAmount" type="number" min="0" step="0.01" placeholder="e.g., 200" />
+        </div>
+        <div class="field">
+          <label>Date</label>
+          <input id="borrowDate" type="date" />
+        </div>
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label>Note (optional)</label>
+        <textarea id="borrowNote" placeholder="e.g., Advance for travel"></textarea>
+      </div>
+
+      <div class="row" style="justify-content:flex-end; margin-top:12px;">
+        <button class="btn" data-close="modalBorrow">Cancel</button>
+        <button class="btn primary" id="btnSaveBorrow">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /***********************
+     * OFFLINE DATA MODEL
+     ***********************/
+    const STORAGE_KEY = "EMP_OFFLINE_APP_V1";
+
+    function uid() {
+      // stable UUID-like id
+      if (crypto && crypto.randomUUID) return crypto.randomUUID();
+      // fallback
+      return 'xxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random()*16|0, v = c === 'x' ? r : (r&0x3|0x8);
+        return v.toString(16);
+      });
+    }
+
+    function todayISO(){
+      const d = new Date();
+      const tz = d.getTimezoneOffset()*60000;
+      return new Date(Date.now()-tz).toISOString().slice(0,10);
+    }
+
+    function fmtDatePretty(iso){
+      // dd MMM yyyy
+      const d = new Date(iso + "T00:00:00");
+      return d.toLocaleDateString(undefined, { day:"2-digit", month:"short", year:"numeric" });
+    }
+
+    function money(n){
+      const x = Number(n || 0);
+      return "₹" + x.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function monthKeyFromISO(iso){ return iso.slice(0,7); } // yyyy-MM
+    function monthStartISO(yyyyMM){ return yyyyMM + "-01"; }
+
+    function loadDB(){
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw){
+        const empty = { employees: [], attendance: [], borrows: [], v:1 };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(empty));
+        return empty;
+      }
+      try{
+        const obj = JSON.parse(raw);
+        obj.employees ||= [];
+        obj.attendance ||= [];
+        obj.borrows ||= [];
+        obj.v ||= 1;
+        return obj;
+      }catch(e){
+        const empty = { employees: [], attendance: [], borrows: [], v:1 };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(empty));
+        return empty;
+      }
+    }
+
+    function saveDB(db){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+    }
+
+    function getEmployeeByUuid(db, uuid){
+      return db.employees.find(e => e.uuid === uuid);
+    }
+
+    function upsertAttendance(db, employeeUuid, dateISO, status /* 'P'|'A' */){
+      const idx = db.attendance.findIndex(a => a.employeeUuid === employeeUuid && a.date === dateISO);
+      if(idx >= 0){
+        db.attendance[idx].status = status;
+        db.attendance[idx].updatedAt = Date.now();
+      }else{
+        db.attendance.push({
+          id: uid(),
+          employeeUuid,
+          date: dateISO,
+          status,
+          createdAt: Date.now()
+        });
+      }
+      saveDB(db);
+    }
+
+    function clearAttendance(db, employeeUuid, dateISO){
+      const idx = db.attendance.findIndex(a => a.employeeUuid === employeeUuid && a.date === dateISO);
+      if(idx >= 0){
+        db.attendance.splice(idx,1);
+        saveDB(db);
+      }
+    }
+
+    function attendanceStatus(db, employeeUuid, dateISO){
+      const a = db.attendance.find(x => x.employeeUuid === employeeUuid && x.date === dateISO);
+      return a ? a.status : null;
+    }
+
+    function addEmployee(db, name, dailyWage){
+      const emp = {
+        id: uid(),
+        uuid: uid(),
+        name: name.trim(),
+        dailyWage: Number(dailyWage),
+        createdAt: Date.now(),
+        isActive: true
+      };
+      db.employees.push(emp);
+      saveDB(db);
+      return emp;
+    }
+
+    function addBorrow(db, employeeUuid, amount, dateISO, note){
+      db.borrows.push({
+        id: uid(),
+        employeeUuid,
+        amount: Number(amount),
+        date: dateISO,
+        note: (note||"").trim(),
+        createdAt: Date.now()
+      });
+      saveDB(db);
+    }
+
+    function updateBorrow(db, borrowId, patch){
+      const b = db.borrows.find(x => x.id === borrowId);
+      if(!b) return;
+      Object.assign(b, patch);
+      saveDB(db);
+    }
+
+    function deleteBorrow(db, borrowId){
+      const idx = db.borrows.findIndex(x => x.id === borrowId);
+      if(idx>=0){
+        db.borrows.splice(idx,1);
+        saveDB(db);
+      }
+    }
+
+    /***********************
+     * EXPORT / IMPORT
+     ***********************/
+    function downloadJSON(obj, filename){
+      const blob = new Blob([JSON.stringify(obj, null, 2)], {type:"application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportFull(){
+      const db = loadDB();
+      downloadJSON({
+        meta: { type:"EMP_BACKUP_FULL", exportedAt: new Date().toISOString(), v:1 },
+        employees: db.employees,
+        attendance: db.attendance,
+        borrows: db.borrows
+      }, `employee_backup_full_${new Date().toISOString().slice(0,10)}.json`);
+    }
+
+    function exportMonthly(monthYYYYMM){
+      const db = loadDB();
+      const attendance = db.attendance.filter(a => a.date.startsWith(monthYYYYMM));
+      const borrows = db.borrows.filter(b => b.date.startsWith(monthYYYYMM));
+      downloadJSON({
+        meta: { type:"EMP_BACKUP_MONTH", month: monthYYYYMM, exportedAt: new Date().toISOString(), v:1 },
+        employees: db.employees,
+        attendance,
+        borrows
+      }, `employee_backup_${monthYYYYMM}.json`);
+    }
+
+    function importJSON(jsonObj){
+      // Merge rules:
+      // - employees merged by uuid; if uuid missing, fallback by name
+      // - attendance upsert by (employeeUuid + date)
+      // - borrows upsert by id; if id duplicates, update; else add
+      const db = loadDB();
+
+      const incomingEmployees = Array.isArray(jsonObj.employees) ? jsonObj.employees : [];
+      const incomingAttendance = Array.isArray(jsonObj.attendance) ? jsonObj.attendance : [];
+      const incomingBorrows = Array.isArray(jsonObj.borrows) ? jsonObj.borrows : [];
+
+      const uuidMap = new Map(); // uuid -> existing uuid
+      // build existing map
+      db.employees.forEach(e => uuidMap.set(e.uuid, e.uuid));
+
+      // Merge employees
+      for(const e of incomingEmployees){
+        if(!e) continue;
+        const incomingUuid = e.uuid || null;
+        if(incomingUuid && getEmployeeByUuid(db, incomingUuid)){
+          // update fields
+          const ex = getEmployeeByUuid(db, incomingUuid);
+          ex.name = e.name ?? ex.name;
+          ex.dailyWage = Number(e.dailyWage ?? ex.dailyWage);
+          ex.isActive = (e.isActive ?? ex.isActive);
+        } else if(incomingUuid){
+          // insert as-is (ensure uuid exists)
+          db.employees.push({
+            id: e.id || uid(),
+            uuid: incomingUuid,
+            name: (e.name||"").trim() || "Unnamed",
+            dailyWage: Number(e.dailyWage||0),
+            createdAt: e.createdAt || Date.now(),
+            isActive: (e.isActive ?? true)
+          });
+        } else {
+          // fallback by name
+          const name = (e.name||"").trim();
+          if(!name) continue;
+          const exByName = db.employees.find(x => x.name.toLowerCase() === name.toLowerCase());
+          if(exByName){
+            exByName.dailyWage = Number(e.dailyWage ?? exByName.dailyWage);
+            exByName.isActive = (e.isActive ?? exByName.isActive);
+          } else {
+            db.employees.push({
+              id: uid(),
+              uuid: uid(),
+              name,
+              dailyWage: Number(e.dailyWage||0),
+              createdAt: Date.now(),
+              isActive: true
+            });
+          }
+        }
+      }
+
+      // Attendance upsert by (employeeUuid + date)
+      for(const a of incomingAttendance){
+        if(!a || !a.employeeUuid || !a.date) continue;
+        const existsEmp = getEmployeeByUuid(db, a.employeeUuid);
+        if(!existsEmp) continue; // ignore if employee missing
+        const idx = db.attendance.findIndex(x => x.employeeUuid === a.employeeUuid && x.date === a.date);
+        if(idx >= 0){
+          db.attendance[idx].status = a.status === "P" ? "P" : (a.status === "A" ? "A" : db.attendance[idx].status);
+          db.attendance[idx].updatedAt = Date.now();
+        } else {
+          db.attendance.push({
+            id: a.id || uid(),
+            employeeUuid: a.employeeUuid,
+            date: a.date,
+            status: (a.status === "P" ? "P" : "A"),
+            createdAt: a.createdAt || Date.now()
+          });
+        }
+      }
+
+      // Borrow upsert by id, if no id then create new
+      for(const b of incomingBorrows){
+        if(!b || !b.employeeUuid || !b.date) continue;
+        const existsEmp = getEmployeeByUuid(db, b.employeeUuid);
+        if(!existsEmp) continue;
+        const id = b.id || uid();
+        const existing = db.borrows.find(x => x.id === id);
+        if(existing){
+          existing.amount = Number(b.amount ?? existing.amount);
+          existing.date = b.date ?? existing.date;
+          existing.note = (b.note ?? existing.note);
+        } else {
+          db.borrows.push({
+            id,
+            employeeUuid: b.employeeUuid,
+            amount: Number(b.amount||0),
+            date: b.date,
+            note: (b.note||"").trim(),
+            createdAt: b.createdAt || Date.now()
+          });
+        }
+      }
+
+      saveDB(db);
+    }
+
+    /***********************
+     * UI STATE
+     ***********************/
+    let state = {
+      selectedDate: todayISO(),
+      search: "",
+      selectedEmployeeUuid: null,
+      detailsMonth: monthKeyFromISO(todayISO()),
+      detailsSelectedDay: null,
+      borrowScope: "month", // 'month' | 'all'
+      borrowEditingId: null
+    };
+
+    /***********************
+     * UI ELEMENTS
+     ***********************/
+    const elTodayText = document.getElementById("todayText");
+    const elBtnPickDate = document.getElementById("btnPickDate");
+    const elDatePicker = document.getElementById("datePicker");
+    const elSearch = document.getElementById("searchInput");
+    const elEmployeeList = document.getElementById("employeeList");
+
+    const elEmpCount = document.getElementById("empCount");
+    const elStatEmployees = document.getElementById("statEmployees");
+    const elStatPresent = document.getElementById("statPresent");
+    const elStatAbsent = document.getElementById("statAbsent");
+    const elStatUnmarked = document.getElementById("statUnmarked");
+    const elStatBorrowAll = document.getElementById("statBorrowAll");
+
+    // Modals
+    const modalAddEmp = document.getElementById("modalAddEmp");
+    const modalDetails = document.getElementById("modalDetails");
+    const modalBorrow = document.getElementById("modalBorrow");
+
+    // Add Emp
+    const fabAdd = document.getElementById("fabAdd");
+    const addEmpName = document.getElementById("addEmpName");
+    const addEmpWage = document.getElementById("addEmpWage");
+    const btnSaveEmp = document.getElementById("btnSaveEmp");
+
+    // Details
+    const detailTitle = document.getElementById("detailTitle");
+    const detailWage = document.getElementById("detailWage");
+    const detailUuid = document.getElementById("detailUuid");
+    const detailMonth = document.getElementById("detailMonth");
+    const detailJumpDate = document.getElementById("detailJumpDate");
+    const btnJump = document.getElementById("btnJump");
+
+    const mPresent = document.getElementById("mPresent");
+    const mAbsent = document.getElementById("mAbsent");
+    const mSalary = document.getElementById("mSalary");
+    const mBorrow = document.getElementById("mBorrow");
+    const mNet = document.getElementById("mNet");
+
+    const aPresent = document.getElementById("aPresent");
+    const aBorrow = document.getElementById("aBorrow");
+    const aNet = document.getElementById("aNet");
+
+    const calMonthTitle = document.getElementById("calMonthTitle");
+    const calGrid = document.getElementById("calGrid");
+    const btnSetP = document.getElementById("btnSetP");
+    const btnSetA = document.getElementById("btnSetA");
+    const btnClearMark = document.getElementById("btnClearMark");
+
+    const btnAddBorrow = document.getElementById("btnAddBorrow");
+    const btnToggleBorrowScope = document.getElementById("btnToggleBorrowScope");
+    const borrowScopeEl = document.getElementById("borrowScope");
+    const borrowList = document.getElementById("borrowList");
+
+    // Borrow modal
+    const borrowModalTitle = document.getElementById("borrowModalTitle");
+    const borrowAmount = document.getElementById("borrowAmount");
+    const borrowDate = document.getElementById("borrowDate");
+    const borrowNote = document.getElementById("borrowNote");
+    const btnSaveBorrow = document.getElementById("btnSaveBorrow");
+
+    // Export/Import
+    const btnExportMonth = document.getElementById("btnExportMonth");
+    const btnExportFull = document.getElementById("btnExportFull");
+    const btnImport = document.getElementById("btnImport");
+    const importFile = document.getElementById("importFile");
+
+    /***********************
+     * RENDERERS
+     ***********************/
+    function renderMain(){
+      const db = loadDB();
+      elTodayText.textContent = fmtDatePretty(state.selectedDate);
+      elDatePicker.value = state.selectedDate;
+
+      // Filter employees
+      const term = state.search.trim().toLowerCase();
+      const employees = db.employees
+        .filter(e => e.isActive !== false)
+        .filter(e => !term || (e.name||"").toLowerCase().includes(term))
+        .sort((a,b) => (a.name||"").localeCompare(b.name||""));
+
+      elEmpCount.textContent = employees.length;
+
+      // Stats for selected date
+      let p=0,a=0,u=0;
+      for(const e of employees){
+        const s = attendanceStatus(db, e.uuid, state.selectedDate);
+        if(s==="P") p++;
+        else if(s==="A") a++;
+        else u++;
+      }
+      elStatEmployees.textContent = db.employees.filter(e=>e.isActive!==false).length;
+      elStatPresent.textContent = p;
+      elStatAbsent.textContent = a;
+      elStatUnmarked.textContent = u;
+
+      // All-time borrowed
+      const totalBorrow = db.borrows.reduce((sum,b)=>sum+Number(b.amount||0),0);
+      elStatBorrowAll.textContent = money(totalBorrow);
+
+      // Build list
+      elEmployeeList.innerHTML = "";
+      if(employees.length===0){
+        elEmployeeList.innerHTML = `<div class="muted" style="padding:8px;">No employees found. Tap + to add.</div>`;
+        return;
+      }
+
+      for(const e of employees){
+        const s = attendanceStatus(db, e.uuid, state.selectedDate);
+        const badgeClass = s==="P" ? "statusBadge statusP" : s==="A" ? "statusBadge statusA" : "statusBadge statusU";
+        const badgeText = s==="P" ? "PRESENT" : s==="A" ? "ABSENT" : "UNMARKED";
+
+        const item = document.createElement("div");
+        item.className = "empItem";
+
+        item.innerHTML = `
+          <div class="empMeta">
+            <div class="empName">${escapeHtml(e.name || "Unnamed")}</div>
+            <div class="empSmall">
+              <span>Daily Wage: <b>${money(e.dailyWage)}</b></span>
+              <span class="${badgeClass}">${badgeText}</span>
+            </div>
+          </div>
+          <div class="empActions">
+            <button class="btn present" data-act="P" data-uuid="${e.uuid}">P</button>
+            <button class="btn absent" data-act="A" data-uuid="${e.uuid}">A</button>
+            <button class="btn details" data-act="D" data-uuid="${e.uuid}">Details</button>
+          </div>
+        `;
+
+        item.addEventListener("click", (ev)=>{
+          const btn = ev.target.closest("button");
+          if(!btn) return;
+          const act = btn.getAttribute("data-act");
+          const uuid = btn.getAttribute("data-uuid");
+          if(act==="D"){
+            openDetails(uuid);
+            return;
+          }
+          if(act==="P" || act==="A"){
+            const db2 = loadDB();
+            const prev = attendanceStatus(db2, uuid, state.selectedDate);
+            if(prev && prev !== act){
+              const ok = confirm(`Attendance already marked as ${prev}. Overwrite to ${act}?`);
+              if(!ok) return;
+            }
+            upsertAttendance(db2, uuid, state.selectedDate, act);
+            renderMain();
+            if(state.selectedEmployeeUuid === uuid){
+              renderDetails();
+            }
+          }
+        });
+
+        elEmployeeList.appendChild(item);
+      }
+    }
+
+    function openDetails(employeeUuid){
+      state.selectedEmployeeUuid = employeeUuid;
+      const db = loadDB();
+      const emp = getEmployeeByUuid(db, employeeUuid);
+      if(!emp){ alert("Employee not found."); return; }
+      state.detailsMonth = monthKeyFromISO(state.selectedDate);
+      detailMonth.value = state.detailsMonth;
+      detailJumpDate.value = state.selectedDate;
+      state.detailsSelectedDay = state.selectedDate;
+
+      detailTitle.textContent = `Employee Details • ${emp.name}`;
+      detailWage.textContent = money(emp.dailyWage);
+      detailUuid.textContent = emp.uuid;
+
+      showModal("modalDetails");
+      renderDetails();
+    }
+
+    function renderDetails(){
+      const db = loadDB();
+      const emp = getEmployeeByUuid(db, state.selectedEmployeeUuid);
+      if(!emp) return;
+
+      // Ensure month
+      const month = detailMonth.value || state.detailsMonth;
+      state.detailsMonth = month;
+      const monthPrefix = month;
+
+      // Monthly attendance
+      const monthlyAtt = db.attendance.filter(a => a.employeeUuid === emp.uuid && a.date.startsWith(monthPrefix));
+      const presentCount = monthlyAtt.filter(x => x.status === "P").length;
+      const absentCount = monthlyAtt.filter(x => x.status === "A").length;
+
+      const monthlySalary = presentCount * Number(emp.dailyWage || 0);
+
+      const monthlyBorrows = db.borrows.filter(b => b.employeeUuid === emp.uuid && b.date.startsWith(monthPrefix));
+      const monthlyBorrowSum = monthlyBorrows.reduce((s,b)=>s+Number(b.amount||0),0);
+
+      const net = monthlySalary - monthlyBorrowSum;
+
+      mPresent.textContent = presentCount;
+      mAbsent.textContent = absentCount;
+      mSalary.textContent = money(monthlySalary);
+      mBorrow.textContent = money(monthlyBorrowSum);
+      mNet.textContent = money(net);
+
+      // All-time
+      const allAtt = db.attendance.filter(a => a.employeeUuid === emp.uuid && a.status === "P");
+      const allPresent = allAtt.length;
+      const allSalary = allPresent * Number(emp.dailyWage||0);
+      const allBorrow = db.borrows.filter(b => b.employeeUuid === emp.uuid).reduce((s,b)=>s+Number(b.amount||0),0);
+      const allNet = allSalary - allBorrow;
+
+      aPresent.textContent = allPresent;
+      aBorrow.textContent = money(allBorrow);
+      aNet.textContent = money(allNet);
+
+      // Calendar render
+      renderCalendar(emp, monthPrefix);
+
+      // Borrow list
+      renderBorrowList(emp);
+    }
+
+    function renderCalendar(emp, monthYYYYMM){
+      // build header DOW
+      const d = new Date(monthYYYYMM + "-01T00:00:00");
+      const monthName = d.toLocaleDateString(undefined, { month:"long", year:"numeric" });
+      calMonthTitle.textContent = monthName;
+
+      calGrid.innerHTML = "";
+      const dows = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+      for(const w of dows){
+        const el = document.createElement("div");
+        el.className = "calDow";
+        el.textContent = w;
+        calGrid.appendChild(el);
+      }
+
+      const db = loadDB();
+      const first = new Date(monthYYYYMM + "-01T00:00:00");
+      const year = first.getFullYear();
+      const monthIndex = first.getMonth();
+      const last = new Date(year, monthIndex+1, 0); // last day of month
+      const daysInMonth = last.getDate();
+
+      // Day of week index for first day
+      const startDow = first.getDay(); // 0..6
+
+      // We will render 6 weeks * 7 = 42 cells typical
+      const totalCells = 42;
+
+      // Determine starting date for grid (previous month tail)
+      const gridStart = new Date(year, monthIndex, 1 - startDow);
+
+      for(let i=0;i<totalCells;i++){
+        const cellDate = new Date(gridStart);
+        cellDate.setDate(gridStart.getDate()+i);
+
+        const cellISO = toISO(cellDate);
+        const cellMonth = cellISO.slice(0,7);
+        const isOther = cellMonth !== monthYYYYMM;
+
+        const status = attendanceStatus(db, emp.uuid, cellISO);
+
+        const cell = document.createElement("div");
+        cell.className = "calCell" + (isOther ? " isOther" : "");
+        cell.setAttribute("data-iso", cellISO);
+
+        if(status==="P"){
+          const dot = document.createElement("div");
+          dot.className = "dayDot dotP";
+          cell.appendChild(dot);
+        } else if(status==="A"){
+          const dot = document.createElement("div");
+          dot.className = "dayDot dotA";
+          cell.appendChild(dot);
+        }
+
+        const num = document.createElement("div");
+        num.className = "dayNum";
+        num.textContent = String(cellDate.getDate());
+        cell.appendChild(num);
+
+        cell.addEventListener("click", ()=>{
+          state.detailsSelectedDay = cellISO;
+          detailJumpDate.value = cellISO;
+          // subtle hint
+          document.getElementById("calHint").textContent = `Selected: ${fmtDatePretty(cellISO)}`;
+        });
+
+        calGrid.appendChild(cell);
+      }
+    }
+
+    function renderBorrowList(emp){
+      const db = loadDB();
+      const month = state.detailsMonth;
+      const list = (state.borrowScope==="month")
+        ? db.borrows.filter(b => b.employeeUuid === emp.uuid && b.date.startsWith(month))
+        : db.borrows.filter(b => b.employeeUuid === emp.uuid);
+
+      borrowScopeEl.textContent = state.borrowScope === "month" ? "Selected month" : "All time";
+      borrowList.innerHTML = "";
+
+      if(list.length === 0){
+        borrowList.innerHTML = `<div class="muted" style="padding:6px 2px;">No borrow entries.</div>`;
+        return;
+      }
+
+      // Sort by date desc
+      list.sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+
+      for(const b of list){
+        const row = document.createElement("div");
+        row.className = "borrowItem";
+        row.innerHTML = `
+          <div class="borrowLeft">
+            <div class="borrowAmt">${money(b.amount)} <span class="muted" style="font-size:12px;">(${b.date})</span></div>
+            <div class="borrowNote">${escapeHtml(b.note || "")}</div>
+          </div>
+          <div class="row" style="justify-content:flex-end;">
+            <button class="btn" data-edit="${b.id}">✏️ Edit</button>
+            <button class="btn danger" data-del="${b.id}">🗑️ Delete</button>
+          </div>
+        `;
+
+        row.addEventListener("click", (ev)=>{
+          const edit = ev.target.closest("button[data-edit]");
+          const del = ev.target.closest("button[data-del]");
+          if(edit){
+            openBorrowModal(emp.uuid, b);
+          }
+          if(del){
+            const ok = confirm("Delete this borrow entry?");
+            if(!ok) return;
+            const db2 = loadDB();
+            deleteBorrow(db2, b.id);
+            renderDetails();
+            renderMain();
+          }
+        });
+
+        borrowList.appendChild(row);
+      }
+    }
+
+    /***********************
+     * HELPERS
+     ***********************/
+    function toISO(dateObj){
+      const tz = dateObj.getTimezoneOffset()*60000;
+      return new Date(dateObj.getTime()-tz).toISOString().slice(0,10);
+    }
+
+    function escapeHtml(str){
+      return String(str).replace(/[&<>"']/g, s => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[s]));
+    }
+
+    function showModal(id){
+      document.getElementById(id).style.display = "flex";
+    }
+    function hideModal(id){
+      document.getElementById(id).style.display = "none";
+    }
+
+    /***********************
+     * EVENTS
+     ***********************/
+    // close modal buttons
+    document.body.addEventListener("click", (e)=>{
+      const close = e.target.closest("[data-close]");
+      if(close){
+        hideModal(close.getAttribute("data-close"));
+      }
+      // click backdrop closes too
+      const backdrop = e.target.classList.contains("modalBackdrop") ? e.target : null;
+      if(backdrop){
+        backdrop.style.display = "none";
+      }
+    });
+
+    // date picker
+    elBtnPickDate.addEventListener("click", ()=>{
+      elDatePicker.classList.remove("hide");
+      elDatePicker.showPicker ? elDatePicker.showPicker() : elDatePicker.click();
+    });
+    elDatePicker.addEventListener("change", ()=>{
+      if(elDatePicker.value){
+        state.selectedDate = elDatePicker.value;
+        renderMain();
+      }
+    });
+
+    // search
+    elSearch.addEventListener("input", ()=>{
+      state.search = elSearch.value;
+      renderMain();
+    });
+
+    // Add employee
+    fabAdd.addEventListener("click", ()=>{
+      addEmpName.value = "";
+      addEmpWage.value = "";
+      showModal("modalAddEmp");
+      setTimeout(()=>addEmpName.focus(), 50);
+    });
+
+    btnSaveEmp.addEventListener("click", ()=>{
+      const name = addEmpName.value.trim();
+      const wage = addEmpWage.value;
+      if(!name){
+        alert("Name is required.");
+        return;
+      }
+      if(wage === "" || isNaN(Number(wage))){
+        alert("Daily Wage must be a number.");
+        return;
+      }
+      const db = loadDB();
+      addEmployee(db, name, wage);
+      hideModal("modalAddEmp");
+      renderMain();
+    });
+
+    // Details month changes
+    detailMonth.addEventListener("change", ()=>{
+      state.detailsMonth = detailMonth.value;
+      renderDetails();
+    });
+
+    btnJump.addEventListener("click", ()=>{
+      const d = detailJumpDate.value;
+      if(!d){ return; }
+      state.detailsSelectedDay = d;
+      // if month differs, update month and rerender
+      const mk = monthKeyFromISO(d);
+      if(mk !== state.detailsMonth){
+        state.detailsMonth = mk;
+        detailMonth.value = mk;
+      }
+      renderDetails();
+      document.getElementById("calHint").textContent = `Selected: ${fmtDatePretty(d)}`;
+    });
+
+    // Calendar actions
+    btnSetP.addEventListener("click", ()=>{
+      const empUuid = state.selectedEmployeeUuid;
+      const day = state.detailsSelectedDay || state.selectedDate;
+      const db = loadDB();
+      const prev = attendanceStatus(db, empUuid, day);
+      if(prev && prev !== "P"){
+        const ok = confirm(`Already marked as ${prev}. Overwrite to P?`);
+        if(!ok) return;
+      }
+      upsertAttendance(db, empUuid, day, "P");
+      renderDetails();
+      renderMain();
+    });
+
+    btnSetA.addEventListener("click", ()=>{
+      const empUuid = state.selectedEmployeeUuid;
+      const day = state.detailsSelectedDay || state.selectedDate;
+      const db = loadDB();
+      const prev = attendanceStatus(db, empUuid, day);
+      if(prev && prev !== "A"){
+        const ok = confirm(`Already marked as ${prev}. Overwrite to A?`);
+        if(!ok) return;
+      }
+      upsertAttendance(db, empUuid, day, "A");
+      renderDetails();
+      renderMain();
+    });
+
+    btnClearMark.addEventListener("click", ()=>{
+      const empUuid = state.selectedEmployeeUuid;
+      const day = state.detailsSelectedDay || state.selectedDate;
+      const ok = confirm("Clear attendance mark for this date?");
+      if(!ok) return;
+      const db = loadDB();
+      clearAttendance(db, empUuid, day);
+      renderDetails();
+      renderMain();
+    });
+
+    // Borrow scope toggle
+    btnToggleBorrowScope.addEventListener("click", ()=>{
+      state.borrowScope = (state.borrowScope === "month") ? "all" : "month";
+      renderDetails();
+    });
+
+    // Borrow add/edit
+    btnAddBorrow.addEventListener("click", ()=>{
+      const empUuid = state.selectedEmployeeUuid;
+      openBorrowModal(empUuid, null);
+    });
+
+    function openBorrowModal(empUuid, borrow){
+      state.borrowEditingId = borrow ? borrow.id : null;
+      borrowModalTitle.textContent = borrow ? "Edit Borrow Entry" : "Add Borrowed Amount";
+      borrowAmount.value = borrow ? Number(borrow.amount||0) : "";
+      borrowDate.value = borrow ? (borrow.date || todayISO()) : (state.detailsSelectedDay || todayISO());
+      borrowNote.value = borrow ? (borrow.note||"") : "";
+      showModal("modalBorrow");
+      setTimeout(()=>borrowAmount.focus(), 50);
+    }
+
+    btnSaveBorrow.addEventListener("click", ()=>{
+      const empUuid = state.selectedEmployeeUuid;
+      const amt = borrowAmount.value;
+      const date = borrowDate.value || todayISO();
+      const note = borrowNote.value || "";
+
+      if(amt === "" || isNaN(Number(amt))){
+        alert("Amount must be a number.");
+        return;
+      }
+
+      const db = loadDB();
+      if(state.borrowEditingId){
+        updateBorrow(db, state.borrowEditingId, {
+          amount: Number(amt),
+          date,
+          note: note.trim()
+        });
+      } else {
+        addBorrow(db, empUuid, Number(amt), date, note.trim());
+      }
+
+      hideModal("modalBorrow");
+      renderDetails();
+      renderMain();
+    });
+
+    // Export / Import
+    btnExportFull.addEventListener("click", ()=>{
+      exportFull();
+    });
+
+    btnExportMonth.addEventListener("click", ()=>{
+      const mk = monthKeyFromISO(state.selectedDate);
+      exportMonthly(mk);
+    });
+
+    btnImport.addEventListener("click", ()=>{
+      importFile.value = "";
+      importFile.click();
+    });
+
+    importFile.addEventListener("change", async ()=>{
+      const file = importFile.files && importFile.files[0];
+      if(!file) return;
+      try{
+        const text = await file.text();
+        const json = JSON.parse(text);
+        importJSON(json);
+        alert("Import complete. Data merged successfully.");
+        renderMain();
+        if(modalDetails.style.display === "flex") renderDetails();
+      } catch(e){
+        alert("Invalid JSON file.");
+      }
+    });
+
+    /***********************
+     * INIT
+     ***********************/
+    function init(){
+      // set default selected date
+      state.selectedDate = todayISO();
+      renderMain();
+    }
+    init();
+
+    if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./sw.js");
   });
 }
-</script>
-
+  </script>
 </body>
 </html>
